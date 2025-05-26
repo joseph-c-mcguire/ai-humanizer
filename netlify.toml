@@ -10,8 +10,7 @@
   targetPort = 3000
   publish = "ai-humanizer-website/build"
 
-[redirects]
-  [[redirects]]
-    from = "/api/*"
-    to = "/.netlify/functions/:splat"
-    status = 200
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
