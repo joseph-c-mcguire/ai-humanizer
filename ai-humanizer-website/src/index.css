@@ -1,0 +1,57 @@
+/* Basic styles for the AI Humanizer website */
+body {
+  font-family: Arial, sans-serif;
+  background: #f7f7f7;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.error {
+  color: #d32f2f;
+}
+
+.success {
+  color: #388e3c;
+}
+
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+textarea, input[type="text"], input[type="email"], input[type="password"] {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+form {
+  max-width: 400px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+h1, h2, h3 {
+  color: #222;
+}
