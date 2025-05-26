@@ -14,7 +14,7 @@ export const humanizeText = async (inputText: string): Promise<string> => {
         }
 
         // Call the edge function with authentication
-        const { data, error } = await supabase.functions.invoke('ai-humanizer', {
+        const { data, error } = await supabase.functions.invoke('ai-humanizer-serve', {
             body: { inputText },
         });
 
