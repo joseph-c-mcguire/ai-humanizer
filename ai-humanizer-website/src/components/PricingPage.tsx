@@ -2,7 +2,7 @@ import React from 'react';
 
 const PricingPage: React.FC = () => {
     return (
-        <div>
+        <div className="pricing-page">
             <h1>Pricing Plans</h1>
             <div className="pricing-plan">
                 <h2>Basic Plan</h2>

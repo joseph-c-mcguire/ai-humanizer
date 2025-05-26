@@ -1,26 +1,26 @@
 import axios from 'axios';
 
-const API_URL = 'https://api.undetectable.ai/humanizer'; // Replace with the actual API endpoint
+const API_URL = process.env.REACT_APP_HUMANIZER_API_URL || 'https://api.openai.com/v1/chat/completions';
+const API_KEY = process.env.REACT_APP_HUMANIZER_API_KEY || process.env.REACT_APP_OPENAI_API_KEY || '';
 
+// Replace direct OpenAI call with Supabase Edge Function call
 export const humanizeText = async (inputText: string): Promise<string> => {
+    const SUPABASE_EDGE_URL = process.env.REACT_APP_SUPABASE_EDGE_URL || 'https://ostzdzthagctsdrkbsbg.supabase.co/functions/v1/humanizer';
     try {
-        const response = await axios.post(API_URL, {
-            text: inputText
+        const response = await fetch(SUPABASE_EDGE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ inputText })
         });
-        // Defensive: check for error or missing field
-        if (response.data && typeof response.data.humanizedText === 'string') {
-            return response.data.humanizedText;
-        } else if (response.data && response.data.error) {
-            throw new Error(response.data.error);
+        const result = await response.json();
+        if (response.ok) {
+            return result.output;
         } else {
-            throw new Error('Unexpected API response.');
+            throw new Error(result.error || 'Failed to humanize text');
         }
     } catch (error: any) {
-        // Try to show a more descriptive error if available
-        if (error.response && error.response.data && error.response.data.error) {
-            throw new Error(error.response.data.error);
-        }
-        console.error('Error humanizing text:', error);
-        throw new Error('Failed to humanize text. Please check your input or try again later.');
+        throw new Error(error.message || 'Failed to humanize text');
     }
 };

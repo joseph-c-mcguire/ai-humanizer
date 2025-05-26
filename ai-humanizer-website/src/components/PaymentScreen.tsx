@@ -2,7 +2,7 @@ import React from 'react';
 
 const PaymentScreen: React.FC = () => {
     return (
-        <div>
+        <div className="payment-form">
             <h1>Payment Processing</h1>
             <p>This is a simulated payment processing screen.</p>
             <form>

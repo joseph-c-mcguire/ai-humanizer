@@ -7,14 +7,17 @@ const Dashboard: React.FC = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        let isMounted = true;
         const fetchProjects = async () => {
             setLoading(true);
             setError('');
             const { data, error: userError } = await supabase.auth.getUser();
             const user = data?.user;
             if (!user) {
-                setError('You must be logged in to view your dashboard.');
-                setLoading(false);
+                if (isMounted) {
+                    setError('You must be logged in to view your dashboard.');
+                    setLoading(false);
+                }
                 return;
             }
             const { data: projectsData, error } = await supabase
@@ -22,18 +25,21 @@ const Dashboard: React.FC = () => {
                 .select('*')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
-            if (error) {
-                setError(error.message);
-            } else {
-                setProjects(projectsData || []);
+            if (isMounted) {
+                if (error) {
+                    setError(error.message);
+                } else {
+                    setProjects(projectsData || []);
+                }
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchProjects();
+        return () => { isMounted = false; };
     }, []);
 
     return (
-        <div>
+        <div className="dashboard">
             <h1>Your Dashboard</h1>
             <h2>Stored Projects</h2>
             {loading ? (
