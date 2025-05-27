@@ -122,6 +122,20 @@ const HomePage: React.FC = () => {
                 inputWords[i] !== word ? 'Reworded for natural tone' : ''
             );
             setDiffReasons(reasons);
+            // Automatically save project if user is logged in
+            if (user && result.choices?.[0]?.message?.content) {
+                try {
+                    await supabase.from('projects').insert({
+                        user_id: user.id,
+                        input_text: inputText,
+                        output_text: result.choices[0].message.content.trim(),
+                        created_at: new Date().toISOString(),
+                    });
+                } catch (saveErr) {
+                    // Optionally, show a toast or log error
+                    console.error('Failed to save project:', saveErr);
+                }
+            }
             setTimeout(() => {
                 if (outputRef.current) {
                     outputRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -457,34 +471,7 @@ const HomePage: React.FC = () => {
                             </button>
                         </h2>
                         <HighlightedDiff input={inputText} output={outputText} reasons={diffReasons} />
-                        {/* Save to Dashboard button for logged-in users */}
-                        {user && (
-                            <button
-                                style={{
-                                    marginTop: 18,
-                                    background: blue,
-                                    color: '#fff',
-                                    border: 'none',
-                                    borderRadius: 8,
-                                    padding: '10px 28px',
-                                    fontSize: 17,
-                                    cursor: 'pointer',
-                                    fontWeight: 700,
-                                    boxShadow: '0 1px 4px rgba(25,118,210,0.08)',
-                                }}
-                                onClick={async () => {
-                                    await supabase.from('projects').insert({
-                                        user_id: user.id,
-                                        input_text: inputText,
-                                        output_text: outputText,
-                                        created_at: new Date().toISOString(),
-                                    });
-                                    alert('Saved to your dashboard!');
-                                }}
-                            >
-                                Save to Dashboard
-                            </button>
-                        )}
+                        {/* Project is now auto-saved for logged-in users */}
                     </div>
                 )}
             </section>
