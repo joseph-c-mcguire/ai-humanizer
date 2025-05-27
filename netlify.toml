@@ -1,6 +1,7 @@
 [build]
+  base = "ai-humanizer-website"
   command = "npm run build"
-  publish = "ai-humanizer-website/build"
+  publish = "build"
 
 [functions]
   directory = "netlify/functions"
@@ -8,7 +9,7 @@
 [dev]
   command = "npm start"
   targetPort = 3000
-  publish = "ai-humanizer-website/build"
+  publish = "build"
 
 [[redirects]]
   from = "/api/*"

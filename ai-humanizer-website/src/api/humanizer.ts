@@ -22,8 +22,16 @@ export const humanizeText = async (inputText: string): Promise<string> => {
             throw new Error(error.message || 'Failed to humanize text');
         }
 
-        return data?.output || '';
+        // Add logging for debugging
+        console.log('Supabase Edge Function response:', data);
+
+        if (!data || typeof data.output !== 'string') {
+            throw new Error('Unexpected response from humanizer function');
+        }
+
+        return data.output;
     } catch (error: any) {
+        console.error('Error in humanizeText:', error);
         throw new Error(error.message || 'Failed to humanize text');
     }
 };

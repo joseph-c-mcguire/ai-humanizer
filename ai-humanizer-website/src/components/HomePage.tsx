@@ -66,59 +66,48 @@ const HomePage: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        let isMounted = true;
         setLoading(true);
         setError('');
         setOutputText('');
         setDiffReasons([]);
         try {
             if (credits !== null && credits <= 0) {
-                if (isMounted) {
-                    setError('You have no credits left. Please upgrade your plan.');
-                }
+                setError('You have no credits left. Please upgrade your plan.');
                 setLoading(false);
                 return;
             }
             // Call API
             const result = await humanizeText(inputText);
-            if (isMounted) {
-                setOutputText(result);
-                // For demo: generate fake reasons for each changed word
-                const inputWords = inputText.split(/(\s+)/);
-                const outputWords = result.split(/(\s+)/);
-                const reasons = outputWords.map((word, i) => {
-                    if (inputWords[i] !== word) {
-                        return 'Reworded for natural tone';
-                    }
-                    return '';
-                });
-                setDiffReasons(reasons);
-            }
+            console.log('Humanized result:', result);
+            setOutputText(result);
+            // For demo: generate fake reasons for each changed word
+            const inputWords = inputText.split(/(\s+)/);
+            const outputWords = result.split(/(\s+)/);
+            const reasons = outputWords.map((word, i) => {
+                if (inputWords[i] !== word) {
+                    return 'Reworded for natural tone';
+                }
+                return '';
+            });
+            setDiffReasons(reasons);
             // Deduct credits and store result
-            await updateUserCredits(isMounted);
+            await updateUserCredits();
             await storeResult(inputText, result);
         } catch (err: any) {
-            if (isMounted) {
-                setError(err.message || 'Failed to humanize text');
-            }
+            setError(err.message || 'Failed to humanize text');
         } finally {
-            if (isMounted) {
-                setLoading(false);
-            }
+            setLoading(false);
         }
-        return () => { isMounted = false; };
     };
 
-    const updateUserCredits = async (isMounted = true) => {
+    const updateUserCredits = async () => {
         const { data } = await supabase.auth.getUser();
         if (data?.user && credits !== null) {
             await supabase
                 .from('users')
                 .update({ credits: credits - 1 })
                 .eq('id', data.user.id);
-            if (isMounted) {
-                setCredits(credits - 1);
-            }
+            setCredits(credits - 1);
         }
     };
 
