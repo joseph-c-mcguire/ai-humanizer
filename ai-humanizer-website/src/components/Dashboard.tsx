@@ -2,7 +2,7 @@
 // run: npm install react-wordcloud d3-cloud --legacy-peer-deps
 // This will bypass the peer dependency warning for react@17 and allow installation.
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import supabase from '../utils/supabaseClient';
 import ReactWordcloud from 'react-wordcloud';
 
@@ -262,24 +262,16 @@ const Dashboard: React.FC = () => {
                         <p>Loading...</p>
                     ) : error ? (
                         <p className="error">{error}</p>
+                    ) : projects.length === 0 ? (
+                        <div style={{ color: '#888', textAlign: 'center', margin: '32px 0' }}>No projects found yet.</div>
                     ) : (
                         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                             {projects.map(project => (
                                 <li key={project.id} style={{ marginBottom: 24, padding: 18, background: '#fafdff', borderRadius: 12, boxShadow: '0 2px 8px rgba(30,233,182,0.07)' }}>
                                     <div style={{ fontWeight: 700, color: blue, marginBottom: 6 }}>Input:</div>
-                                    <div>{project.input_text}</div>
-                                    <div style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>
-                                        {evaluateBestPractices(project.input_text).map((tip, i) => (
-                                            <span key={i} style={{ marginRight: 8, background: '#e0f7fa', color: '#1976D2', borderRadius: 4, padding: '2px 8px' }}>{tip}</span>
-                                        ))}
-                                    </div>
+                                    <div style={{ marginBottom: 8, color: '#333', fontSize: 15 }}>{project.input_text}</div>
                                     <div style={{ fontWeight: 700, color: turquoise, marginBottom: 6, marginTop: 10 }}>Output:</div>
-                                    <div>{project.output_text}</div>
-                                    <div style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>
-                                        {evaluateBestPractices(project.output_text).map((tip, i) => (
-                                            <span key={i} style={{ marginRight: 8, background: '#e0f7fa', color: '#1DE9B6', borderRadius: 4, padding: '2px 8px' }}>{tip}</span>
-                                        ))}
-                                    </div>
+                                    <div style={{ marginBottom: 8, color: '#333', fontSize: 15 }}>{project.output_text}</div>
                                     <small style={{ color: '#888' }}>{new Date(project.created_at).toLocaleString()}</small>
                                 </li>
                             ))}
@@ -287,24 +279,25 @@ const Dashboard: React.FC = () => {
                     )}
                     <h2 style={{ color: blue, fontWeight: 800, marginTop: 40, marginBottom: 18 }}>Credits History</h2>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        {creditsHistory.length === 0 && <li>No credits history found.</li>}
-                        {creditsHistory.map(entry => (
-                            <li key={entry.id} style={{ marginBottom: 10 }}>
-                                <span style={{ color: entry.change > 0 ? turquoise : '#d32f2f', fontWeight: 700 }}>
-                                    {entry.change > 0 ? '+' : ''}{entry.change}
-                                </span>
-                                <span style={{ marginLeft: 8 }}>{entry.reason || 'No reason'}</span>
-                                <small style={{ marginLeft: 12, color: '#888' }}>{new Date(entry.created_at).toLocaleString()}</small>
+                        {creditsHistory.length === 0 ? (
+                            <div style={{ color: '#888', textAlign: 'center', margin: '16px 0' }}>No credits history found.</div>
+                        ) : creditsHistory.map(entry => (
+                            <li key={entry.id} style={{ marginBottom: 16, padding: 14, background: '#e0f7fa', borderRadius: 10, boxShadow: '0 1px 4px rgba(30,233,182,0.06)' }}>
+                                <div style={{ fontWeight: 700, color: blue }}>{entry.reason || 'Credit change'}</div>
+                                <div style={{ color: turquoise, fontWeight: 800 }}>Amount: {entry.amount > 0 ? '+' : ''}{entry.amount}</div>
+                                <small style={{ color: '#888' }}>{new Date(entry.created_at).toLocaleString()}</small>
                             </li>
                         ))}
                     </ul>
                     <h2 style={{ color: blue, fontWeight: 800, marginTop: 40, marginBottom: 18 }}>Payments</h2>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                        {payments.length === 0 && <li>No payments found.</li>}
-                        {payments.map(payment => (
-                            <li key={payment.id} style={{ marginBottom: 10 }}>
-                                <span style={{ fontWeight: 700, color: turquoise }}>{payment.amount} credits</span> for <span style={{ color: blue }}>{payment.plans?.name || 'Unknown Plan'}</span> - {payment.status}
-                                <small style={{ marginLeft: 12, color: '#888' }}>{new Date(payment.created_at).toLocaleString()}</small>
+                        {payments.length === 0 ? (
+                            <div style={{ color: '#888', textAlign: 'center', margin: '16px 0' }}>No payments found.</div>
+                        ) : payments.map(payment => (
+                            <li key={payment.id} style={{ marginBottom: 16, padding: 14, background: '#fff', borderRadius: 10, boxShadow: '0 1px 4px rgba(30,233,182,0.06)' }}>
+                                <div style={{ fontWeight: 700, color: blue }}>Plan: {payment.plans?.name || payment.plan_id}</div>
+                                <div style={{ color: turquoise, fontWeight: 800 }}>Amount: ${payment.amount}</div>
+                                <small style={{ color: '#888' }}>{new Date(payment.created_at).toLocaleString()}</small>
                             </li>
                         ))}
                     </ul>
@@ -352,31 +345,43 @@ const Dashboard: React.FC = () => {
                 <div style={{ marginTop: 32, textAlign: 'center' }}>
                     <h2 style={{ color: blue, fontWeight: 800, marginBottom: 18 }}>Usage Over Time</h2>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', justifyContent: 'center', minHeight: 120 }}>
-                        {usageDays.map((day, i) => (
-                            <div key={day} style={{ width: 32, background: turquoise, height: usageCounts[i] * 18 + 10, borderRadius: 8, margin: '0 2px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', transition: 'height 0.3s' }}>
-                                <span style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>{usageCounts[i]}</span>
-                                <span style={{ color: '#333', fontSize: 12, marginTop: 6 }}>{day}</span>
+                        {usageDays.length === 0 ? (
+                            <div style={{ color: '#888', margin: '24px 0' }}>No usage data yet.</div>
+                        ) : usageDays.map((day, i) => (
+                            <div key={day} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ height: usageCounts[i] * 18, width: 24, background: turquoise, borderRadius: 6, marginBottom: 4, transition: 'height 0.3s' }}></div>
+                                <span style={{ fontSize: 12, color: '#888' }}>{day}</span>
+                                <span style={{ fontSize: 13, color: blue, fontWeight: 700 }}>{usageCounts[i]}</span>
                             </div>
                         ))}
                     </div>
                     <div style={{ marginTop: 32 }}>
                         <h3 style={{ color: blue, fontWeight: 800 }}>Project Length Distribution</h3>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', justifyContent: 'center', minHeight: 80 }}>
-                            {['<50', '50-100', '100-200', '200+'].map((bucket, i) => {
-                                const counts = projects.filter(p => {
-                                    const len = p.input_text.length;
-                                    if (i === 0) return len < 50;
-                                    if (i === 1) return len >= 50 && len < 100;
-                                    if (i === 2) return len >= 100 && len < 200;
-                                    return len >= 200;
-                                }).length;
-                                return (
-                                    <div key={bucket} style={{ width: 38, background: blue, height: counts * 16 + 8, borderRadius: 8, margin: '0 2px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', transition: 'height 0.3s' }}>
-                                        <span style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{counts}</span>
-                                        <span style={{ color: '#fff', fontSize: 12, marginTop: 6 }}>{bucket}</span>
+                            {/* Simple length distribution bar chart */}
+                            {projects.length === 0 ? (
+                                <div style={{ color: '#888', margin: '24px 0' }}>No projects to analyze.</div>
+                            ) : (() => {
+                                // Group projects by output_text length buckets
+                                const buckets = [0, 50, 100, 200, 400, 800];
+                                const dist: number[] = Array(buckets.length).fill(0);
+                                projects.forEach(p => {
+                                    const len = (p.output_text || '').length;
+                                    for (let j = 0; j < buckets.length; j++) {
+                                        if (len <= buckets[j]) {
+                                            dist[j]++;
+                                            break;
+                                        }
+                                    }
+                                });
+                                return buckets.map((b, j) => (
+                                    <div key={b} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <div style={{ height: dist[j] * 16, width: 18, background: blue, borderRadius: 4, marginBottom: 2, transition: 'height 0.3s' }}></div>
+                                        <span style={{ fontSize: 11, color: '#888' }}>{j === 0 ? `≤${b}` : `${buckets[j-1]+1}-${b}`}</span>
+                                        <span style={{ fontSize: 12, color: turquoise, fontWeight: 700 }}>{dist[j]}</span>
                                     </div>
-                                );
-                            })}
+                                ));
+                            })()}
                         </div>
                     </div>
                 </div>
