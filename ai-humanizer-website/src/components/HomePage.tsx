@@ -51,14 +51,20 @@ const HomePage: React.FC = () => {
         setOutputText('');
         setDiffReasons([]);
         try {
-            // Use the same humanizeText logic as before
             const response = await fetch('/api/humanizer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: inputText })
             });
+            // Check if response is HTML (Netlify 404 or error page)
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/html')) {
+                const html = await response.text();
+                if (html.includes('Page not found') || html.includes('<!DOCTYPE html')) {
+                    throw new Error('API endpoint not found. Please check your backend/API deployment.');
+                }
+            }
             if (!response.ok) {
-                // Try to get error message from response, fallback to status
                 let msg = `API error: ${response.status}`;
                 try {
                     const text = await response.text();
@@ -73,7 +79,6 @@ const HomePage: React.FC = () => {
                 throw new Error('The server did not return valid JSON. This usually means the API is not running or misconfigured.');
             }
             setOutputText(result.output || '');
-            // Simple diff for now
             const inputWords = inputText.split(/(\s+)/);
             const outputWords = (result.output || '').split(/(\s+)/);
             const reasons = outputWords.map((word: string, i: number) =>
