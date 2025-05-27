@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import supabase from '../utils/supabaseClient';
-import HighlightedDiff from './HomePageDiff.tsx';
+import HighlightedDiff from './HomePageDiff';
 import { signUpUser, signInUser, signOutUser, getSession } from '../utils/auth';
 
 const turquoise = '#1DE9B6';
@@ -156,6 +156,7 @@ const HomePage: React.FC = () => {
         e.preventDefault();
         setAuthError('');
         try {
+            // FIX: Pass an object instead of two arguments
             const { user, error } = await signInUser({ email: authEmail, password: authPassword });
             if (error) {
                 setAuthError(error.message || 'Login failed');
