@@ -51,24 +51,37 @@ const HomePage: React.FC = () => {
         setOutputText('');
         setDiffReasons([]);
         try {
-            const response = await fetch('/api/humanizer', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text: inputText })
-            });
-            // Check if response is HTML (Netlify 404 or error page)
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('text/html')) {
-                const html = await response.text();
-                if (html.includes('Page not found') || html.includes('<!DOCTYPE html')) {
-                    throw new Error('API endpoint not found. Please check your backend/API deployment.');
-                }
+            const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+            if (!apiKey) {
+                throw new Error('OpenAI API key is not set. Please set REACT_APP_OPENAI_API_KEY in your environment.');
             }
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: 'gpt-3.5-turbo',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are an expert at rewriting AI-generated text to sound as human and natural as possible. Rewrite the following text to be undetectable as AI-generated, while preserving the original meaning.'
+                        },
+                        {
+                            role: 'user',
+                            content: `Humanize this text: ${inputText}`
+                        }
+                    ],
+                    max_tokens: 1024,
+                    temperature: 0.7
+                })
+            });
             if (!response.ok) {
-                let msg = `API error: ${response.status}`;
+                let msg = `OpenAI API error: ${response.status}`;
                 try {
-                    const text = await response.text();
-                    msg = text || msg;
+                    const data = await response.json();
+                    msg = data.error?.message || msg;
                 } catch {}
                 throw new Error(msg);
             }
@@ -76,11 +89,11 @@ const HomePage: React.FC = () => {
             try {
                 result = await response.json();
             } catch (jsonErr) {
-                throw new Error('The server did not return valid JSON. This usually means the API is not running or misconfigured.');
+                throw new Error('The server did not return valid JSON.');
             }
-            setOutputText(result.output || '');
+            setOutputText(result.choices?.[0]?.message?.content?.trim() || '');
             const inputWords = inputText.split(/(\s+)/);
-            const outputWords = (result.output || '').split(/(\s+)/);
+            const outputWords = (result.choices?.[0]?.message?.content?.trim() || '').split(/(\s+)/);
             const reasons = outputWords.map((word: string, i: number) =>
                 inputWords[i] !== word ? 'Reworded for natural tone' : ''
             );
