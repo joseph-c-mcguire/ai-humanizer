@@ -141,6 +141,24 @@ const Dashboard: React.FC = () => {
         })();
     }, [user]);
 
+    // Helper function to evaluate best practices for a string
+    function evaluateBestPractices(text: string) {
+        const { length } = text;
+        const hasPunctuation = /[.!?]/.test(text);
+        const hasCapitalization = /[A-Z]/.test(text[0]);
+        const hasParagraphs = /\n{2,}/.test(text);
+        const isLong = length > 120;
+        const isShort = length < 30;
+        let summary = [];
+        if (isShort) { summary.push('Very short (may seem robotic)'); }
+        if (isLong) { summary.push('Good length for natural writing'); }
+        if (!hasPunctuation) { summary.push('No punctuation (add periods, etc.)'); }
+        if (!hasCapitalization) { summary.push('No capitalization at start'); }
+        if (hasParagraphs) { summary.push('Has paragraphs (good for readability)'); }
+        if (summary.length === 0) { summary.push('Looks good!'); }
+        return summary;
+    }
+
     if (checkingAuth) return <div>Loading dashboard...</div>;
     if (!user) {
         return (
@@ -170,8 +188,19 @@ const Dashboard: React.FC = () => {
             ) : (
                 <ul>
                     {projects.map(project => (
-                        <li key={project.id}>
-                            {project.input_text} → {project.output_text} <br />
+                        <li key={project.id} style={{ marginBottom: 18, padding: 12, background: '#fafdff', borderRadius: 8, boxShadow: '0 1px 4px rgba(30,233,182,0.04)' }}>
+                            <div><strong>Input:</strong> {project.input_text}</div>
+                            <div style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>
+                                {evaluateBestPractices(project.input_text).map((tip, i) => (
+                                    <span key={i} style={{ marginRight: 8, background: '#e0f7fa', color: '#1976D2', borderRadius: 4, padding: '2px 8px' }}>{tip}</span>
+                                ))}
+                            </div>
+                            <div><strong>Output:</strong> {project.output_text}</div>
+                            <div style={{ fontSize: 13, color: '#888', marginBottom: 4 }}>
+                                {evaluateBestPractices(project.output_text).map((tip, i) => (
+                                    <span key={i} style={{ marginRight: 8, background: '#e0f7fa', color: '#1DE9B6', borderRadius: 4, padding: '2px 8px' }}>{tip}</span>
+                                ))}
+                            </div>
                             <small>{new Date(project.created_at).toLocaleString()}</small>
                         </li>
                     ))}
@@ -185,8 +214,7 @@ const Dashboard: React.FC = () => {
                         {entry.change > 0 ? '+' : ''}{entry.change} ({entry.reason || 'No reason'}) <small>{new Date(entry.created_at).toLocaleString()}</small>
                     </li>
                 ))}
-            </ul>
-            <h2>Payments</h2>
+            </h2>
             <ul>
                 {payments.length === 0 && <li>No payments found.</li>}
                 {payments.map(payment => (
