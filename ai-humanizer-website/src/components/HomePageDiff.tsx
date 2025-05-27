@@ -151,106 +151,124 @@ const HighlightedDiff: React.FC<{ input: string; output: string; reasons: string
         if (debounceRef.current) { clearTimeout(debounceRef.current); }
     };
 
+    // Center the main container and diff output
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative' }}>
-            <div style={{
-                background: 'linear-gradient(90deg, #fafdff 60%, #e0f7fa 100%)',
-                borderRadius: 16,
-                padding: 24,
-                fontSize: 19,
-                lineHeight: 1.8,
-                wordBreak: 'break-word',
-                boxShadow: '0 6px 24px rgba(30,233,182,0.10)',
-                minHeight: 60,
-                transition: 'box-shadow 0.3s',
-                overflowX: 'auto',
-            }}>
-                {outputWords.map((word, i) => {
-                    const changed = inputWords[i] !== word;
-                    return (
-                        <span
-                            key={i}
-                            style={{
-                                background: changed ? 'linear-gradient(90deg, #1DE9B6 10%, #1976D2 90%)' : 'transparent',
-                                color: changed ? '#fff' : '#222',
-                                borderRadius: 8,
-                                padding: changed ? '4px 10px' : undefined,
-                                margin: '0 2px',
-                                transition: 'background 0.3s, color 0.3s, box-shadow 0.3s',
-                                cursor: changed ? 'pointer' : 'default',
-                                fontWeight: changed ? 700 : 400,
-                                position: 'relative',
-                                boxShadow: changed ? '0 2px 12px rgba(30,233,182,0.13)' : undefined,
-                                outline: changed && hoveredIdx === i ? '2px solid #fff' : undefined,
-                            }}
-                            title={changed ? (reasons[i] || 'Changed for humanization') : 'No change'}
-                            onMouseEnter={changed ? (e) => handleMouseEnter(i, word, e) : undefined}
-                            onMouseLeave={changed ? handleMouseLeave : undefined}
-                            tabIndex={changed ? 0 : -1}
-                            aria-label={changed ? `Changed: ${word}` : undefined}
-                        >
-                            {word}
-                            {hoveredIdx === i && changed && tooltipPos && (
-                                <div
-                                    style={{
-                                        position: 'fixed',
-                                        left: tooltipPos.x + 16,
-                                        top: tooltipPos.y + 16,
-                                        background: '#fff',
-                                        color: '#222',
-                                        border: '1.5px solid #1DE9B6',
-                                        borderRadius: 14,
-                                        boxShadow: '0 8px 32px rgba(30,233,182,0.18)',
-                                        padding: '18px 22px',
-                                        zIndex: 9999,
-                                        minWidth: 240,
-                                        fontSize: 16,
-                                        maxWidth: 340,
-                                        pointerEvents: 'auto',
-                                        animation: 'fadeIn 0.25s',
-                                    }}
-                                    role="tooltip"
-                                >
-                                    <div style={{ fontWeight: 700, marginBottom: 8, color: '#1976D2' }}>Why this change?</div>
-                                    {explanationLoading ? (
-                                        <div style={{ color: '#888' }}>Loading explanation...</div>
-                                    ) : explanation ? (
-                                        <div style={{ marginBottom: 10 }}>{explanation}</div>
-                                    ) : (
-                                        <div style={{ color: '#888', marginBottom: 10 }}>No explanation</div>
-                                    )}
-                                    <div style={{ fontWeight: 600, marginBottom: 4, color: '#1DE9B6' }}>Alternatives:</div>
-                                    {altLoading ? (
-                                        <div style={{ color: '#888' }}>Loading...</div>
-                                    ) : alternatives.length > 0 ? (
-                                        <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
-                                            {alternatives.map((alt, idx) => (
-                                                <li key={idx}>{alt}</li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <div style={{ color: '#888' }}>No suggestions</div>
-                                    )}
-                                </div>
-                            )}
-                        </span>
-                    );
-                })}
-            </div>
-            {/* Disclaimer section */}
-            <div style={{
-                marginTop: 18,
-                fontSize: 15,
-                color: '#888',
-                background: 'rgba(25,118,210,0.06)',
-                borderRadius: 10,
-                padding: '12px 18px',
-                textAlign: 'center',
-                boxShadow: '0 2px 8px rgba(25,118,210,0.04)',
-                maxWidth: 600,
-                alignSelf: 'center',
-            }}>
-                <strong>Disclaimer:</strong> This tool uses AI to suggest human-like rewrites and explanations. Results may not always be perfect or contextually accurate. Please review and edit the output as needed for your use case.
+        <div style={{
+            maxWidth: 1100,
+            margin: '0 auto',
+            padding: 0,
+            minHeight: '100vh',
+            background: 'linear-gradient(90deg, #fafdff 60%, #e0f7fa 100%)',
+            borderRadius: 32,
+            boxShadow: '0 8px 48px rgba(30,233,182,0.10)',
+            position: 'relative',
+            zIndex: 1,
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+        }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, position: 'relative', alignItems: 'center', textAlign: 'center' }}>
+                <div style={{
+                    background: 'linear-gradient(90deg, #fafdff 60%, #e0f7fa 100%)',
+                    borderRadius: 16,
+                    padding: 24,
+                    fontSize: 19,
+                    lineHeight: 1.8,
+                    wordBreak: 'break-word',
+                    boxShadow: '0 6px 24px rgba(30,233,182,0.10)',
+                    minHeight: 60,
+                    transition: 'box-shadow 0.3s',
+                    overflowX: 'auto',
+                }}>
+                    {outputWords.map((word, i) => {
+                        const changed = inputWords[i] !== word;
+                        return (
+                            <span
+                                key={i}
+                                style={{
+                                    background: changed ? 'linear-gradient(90deg, #1DE9B6 10%, #1976D2 90%)' : 'transparent',
+                                    color: changed ? '#fff' : '#222',
+                                    borderRadius: 8,
+                                    padding: changed ? '4px 10px' : undefined,
+                                    margin: '0 2px',
+                                    transition: 'background 0.3s, color 0.3s, box-shadow 0.3s',
+                                    cursor: changed ? 'pointer' : 'default',
+                                    fontWeight: changed ? 700 : 400,
+                                    position: 'relative',
+                                    boxShadow: changed ? '0 2px 12px rgba(30,233,182,0.13)' : undefined,
+                                    outline: changed && hoveredIdx === i ? '2px solid #fff' : undefined,
+                                }}
+                                title={changed ? (reasons[i] || 'Changed for humanization') : 'No change'}
+                                onMouseEnter={changed ? (e) => handleMouseEnter(i, word, e) : undefined}
+                                onMouseLeave={changed ? handleMouseLeave : undefined}
+                                tabIndex={changed ? 0 : -1}
+                                aria-label={changed ? `Changed: ${word}` : undefined}
+                            >
+                                {word}
+                                {hoveredIdx === i && changed && tooltipPos && (
+                                    <div
+                                        style={{
+                                            position: 'fixed',
+                                            left: tooltipPos.x + 16,
+                                            top: tooltipPos.y + 16,
+                                            background: '#fff',
+                                            color: '#222',
+                                            border: '1.5px solid #1DE9B6',
+                                            borderRadius: 14,
+                                            boxShadow: '0 8px 32px rgba(30,233,182,0.18)',
+                                            padding: '18px 22px',
+                                            zIndex: 9999,
+                                            minWidth: 240,
+                                            fontSize: 16,
+                                            maxWidth: 340,
+                                            pointerEvents: 'auto',
+                                            animation: 'fadeIn 0.25s',
+                                        }}
+                                        role="tooltip"
+                                    >
+                                        <div style={{ fontWeight: 700, marginBottom: 8, color: '#1976D2' }}>Why this change?</div>
+                                        {explanationLoading ? (
+                                            <div style={{ color: '#888' }}>Loading explanation...</div>
+                                        ) : explanation ? (
+                                            <div style={{ marginBottom: 10 }}>{explanation}</div>
+                                        ) : (
+                                            <div style={{ color: '#888', marginBottom: 10 }}>No explanation</div>
+                                        )}
+                                        <div style={{ fontWeight: 600, marginBottom: 4, color: '#1DE9B6' }}>Alternatives:</div>
+                                        {altLoading ? (
+                                            <div style={{ color: '#888' }}>Loading...</div>
+                                        ) : alternatives.length > 0 ? (
+                                            <ul style={{ margin: 0, padding: 0, listStyle: 'disc inside' }}>
+                                                {alternatives.map((alt, idx) => (
+                                                    <li key={idx}>{alt}</li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <div style={{ color: '#888' }}>No suggestions</div>
+                                        )}
+                                    </div>
+                                )}
+                            </span>
+                        );
+                    })}
+                </div>
+                {/* Disclaimer section */}
+                <div style={{
+                    marginTop: 18,
+                    fontSize: 15,
+                    color: '#888',
+                    background: 'rgba(25,118,210,0.06)',
+                    borderRadius: 10,
+                    padding: '12px 18px',
+                    textAlign: 'center',
+                    boxShadow: '0 2px 8px rgba(25,118,210,0.04)',
+                    maxWidth: 600,
+                    alignSelf: 'center',
+                }}>
+                    <strong>Disclaimer:</strong> This tool uses AI to suggest human-like rewrites and explanations. Results may not always be perfect or contextually accurate. Please review and edit the output as needed for your use case.
+                </div>
             </div>
         </div>
     );

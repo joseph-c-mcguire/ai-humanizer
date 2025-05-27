@@ -1,7 +1,7 @@
 // --- Modernized HomePage with smooth edges, creative layout, and navigation ---
 import React, { useState, useRef, useEffect } from 'react';
-import supabase from '../utils/supabaseClient';
 import { Link, useHistory } from 'react-router-dom';
+import supabase from '../utils/supabaseClient';
 import HighlightedDiff from './HomePageDiff';
 
 const turquoise = '#1DE9B6';
@@ -19,6 +19,15 @@ const HomePage: React.FC = () => {
     const [user, setUser] = useState<any>(null);
     const [checkingAuth, setCheckingAuth] = useState(true);
     const history = useHistory();
+
+    // Auth states
+    const [showLogin, setShowLogin] = useState(false);
+    const [showSignup, setShowSignup] = useState(false);
+    const [authEmail, setAuthEmail] = useState('');
+    const [authPassword, setAuthPassword] = useState('');
+    const [authFirstName, setAuthFirstName] = useState(''); // New: first name
+    const [authLastName, setAuthLastName] = useState('');   // New: last name
+    const [authError, setAuthError] = useState('');
 
     useEffect(() => {
         let isMounted = true;
@@ -127,6 +136,7 @@ const HomePage: React.FC = () => {
         setTimeout(() => setClearAnim(false), 500);
     };
 
+    // Centering for main container and sections
     return (
         <div style={{
             maxWidth: 1100,
@@ -139,6 +149,10 @@ const HomePage: React.FC = () => {
             position: 'relative',
             zIndex: 1,
             overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
         }}>
             {/* Navigation Bar */}
             <header style={{
@@ -188,19 +202,40 @@ const HomePage: React.FC = () => {
                             }}
                         >Logout</button>
                     ) : (
-                        <Link to="/login" style={{
-                            background: turquoise,
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: 8,
-                            padding: '8px 22px',
-                            fontWeight: 700,
-                            fontSize: 17,
-                            marginLeft: 8,
-                            textDecoration: 'none',
-                            boxShadow: '0 2px 8px rgba(30,233,182,0.08)',
-                            transition: 'background 0.2s',
-                        }}>Login</Link>
+                        <>
+                            <button
+                                onClick={() => setShowLogin(true)}
+                                style={{
+                                    background: turquoise,
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    padding: '8px 22px',
+                                    fontWeight: 700,
+                                    fontSize: 17,
+                                    marginLeft: 8,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 2px 8px rgba(30,233,182,0.08)',
+                                    transition: 'background 0.2s',
+                                }}
+                            >Login</button>
+                            <button
+                                onClick={() => setShowSignup(true)}
+                                style={{
+                                    background: blue,
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    padding: '8px 22px',
+                                    fontWeight: 700,
+                                    fontSize: 17,
+                                    marginLeft: 8,
+                                    cursor: 'pointer',
+                                    boxShadow: '0 2px 8px rgba(25,118,210,0.08)',
+                                    transition: 'background 0.2s',
+                                }}
+                            >Sign Up</button>
+                        </>
                     )}
                 </nav>
             </header>
@@ -252,7 +287,7 @@ const HomePage: React.FC = () => {
             </section>
 
             {/* Humanizer Tool Section */}
-            <section id="humanizer-tool" className="section" style={{ margin: '3.5rem 0', position: 'relative', borderRadius: 24, background: '#fff', boxShadow: '0 4px 32px rgba(30,233,182,0.06)', padding: '2.5rem 1.5rem' }}>
+            <section id="humanizer-tool" className="section" style={{ margin: '3.5rem 0', position: 'relative', borderRadius: 24, background: '#fff', boxShadow: '0 4px 32px rgba(30,233,182,0.06)', padding: '2.5rem 1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <h2 style={{ fontSize: 30, marginBottom: 18, color: blue, fontWeight: 800 }}>AI Text Humanizer</h2>
                 <p style={{ marginBottom: 28, fontSize: 18, color: '#444' }}>
                     Paste your text below and click <b>Humanize</b> to make it sound more natural and human-like.
@@ -413,6 +448,80 @@ const HomePage: React.FC = () => {
                     </div>
                 </div>
             </section>
+
+            {/* Login Modal */}
+            {showLogin && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+                    <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        setAuthError('');
+                        const { error } = await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
+                        if (error) setAuthError(error.message);
+                        else {
+                            setShowLogin(false);
+                            setAuthEmail('');
+                            setAuthPassword('');
+                        }
+                    }} style={{ background: '#fff', padding: 32, borderRadius: 16, minWidth: 340, boxShadow: '0 4px 32px rgba(25,118,210,0.13)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <h2 style={{ color: blue, marginBottom: 18, fontWeight: 900, letterSpacing: 1 }}>Login</h2>
+                        <input type="email" placeholder="Email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        <input type="password" placeholder="Password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        {authError && <div style={{ color: 'red', marginBottom: 10, fontWeight: 600 }}>{authError}</div>}
+                        <button type="submit" style={{ background: turquoise, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 28px', fontWeight: 700, fontSize: 17, marginTop: 8, cursor: 'pointer', boxShadow: '0 2px 8px rgba(30,233,182,0.08)', transition: 'background 0.2s' }}>Login</button>
+                        <div style={{ marginTop: 12 }}>
+                            <span style={{ color: '#555' }}>No account? </span>
+                            <button type="button" onClick={() => { setShowLogin(false); setShowSignup(true); }} style={{ background: 'none', color: blue, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Sign Up</button>
+                        </div>
+                        <button type="button" onClick={() => setShowLogin(false)} style={{ marginTop: 10, background: 'none', color: '#888', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                    </form>
+                </div>
+            )}
+            {/* Signup Modal */}
+            {showSignup && (
+                <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+                    <form onSubmit={async (e) => {
+                        e.preventDefault();
+                        setAuthError('');
+                        // Supabase sign up with metadata and logging
+                        const { data, error } = await supabase.auth.signUp({
+                            email: authEmail,
+                            password: authPassword,
+                            options: {
+                                data: {
+                                    first_name: authFirstName,
+                                    last_name: authLastName,
+                                },
+                            },
+                        });
+                        if (error) {
+                            setAuthError(error.message);
+                        } else {
+                            // Log sign-up event to auth_logs
+                            if (data?.user?.id) {
+                                await supabase.from('auth_logs').insert([{ event_type: 'sign_up', user_id: data.user.id }]);
+                            }
+                            setShowSignup(false);
+                            setAuthEmail('');
+                            setAuthPassword('');
+                            setAuthFirstName('');
+                            setAuthLastName('');
+                        }
+                    }} style={{ background: '#fff', padding: 32, borderRadius: 16, minWidth: 340, boxShadow: '0 4px 32px rgba(30,233,182,0.13)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                        <h2 style={{ color: turquoise, marginBottom: 18, fontWeight: 900, letterSpacing: 1 }}>Sign Up</h2>
+                        <input type="text" placeholder="First Name" value={authFirstName} onChange={e => setAuthFirstName(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        <input type="text" placeholder="Last Name" value={authLastName} onChange={e => setAuthLastName(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        <input type="email" placeholder="Email" value={authEmail} onChange={e => setAuthEmail(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        <input type="password" placeholder="Password" value={authPassword} onChange={e => setAuthPassword(e.target.value)} required style={{ width: '90%', padding: 12, marginBottom: 8, borderRadius: 8, border: '1.5px solid #ccc', fontSize: 17, textAlign: 'center' }} />
+                        {authError && <div style={{ color: 'red', marginBottom: 10, fontWeight: 600 }}>{authError}</div>}
+                        <button type="submit" style={{ background: turquoise, color: '#fff', border: 'none', borderRadius: 8, padding: '10px 28px', fontWeight: 700, fontSize: 17, marginTop: 8, cursor: 'pointer', boxShadow: '0 2px 8px rgba(30,233,182,0.08)', transition: 'background 0.2s' }}>Sign Up</button>
+                        <div style={{ marginTop: 12 }}>
+                            <span style={{ color: '#555' }}>Already have an account? </span>
+                            <button type="button" onClick={() => { setShowSignup(false); setShowLogin(true); }} style={{ background: 'none', color: blue, border: 'none', fontWeight: 700, cursor: 'pointer' }}>Login</button>
+                        </div>
+                        <button type="button" onClick={() => setShowSignup(false)} style={{ marginTop: 10, background: 'none', color: '#888', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                    </form>
+                </div>
+            )}
         </div>
     );
 };
