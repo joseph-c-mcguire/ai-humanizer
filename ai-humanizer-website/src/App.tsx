@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { ErrorBoundary } from 'react-error-boundary';
 import HomePage from './components/HomePage';
 import LoginPage from './components/LoginPage';
@@ -82,30 +82,6 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
       <Router>
-        <nav className="navbar" style={{ background: '#e0f7fa', color: blue, boxShadow: '0 2px 8px rgba(25, 233, 182, 0.10)' }}>
-          <div style={{ fontWeight: 700, fontSize: '1.3rem', letterSpacing: '1px', color: turquoise }}>AI Humanizer</div>
-          <div className="nav-links">
-            <Link to="/" style={{ color: blue }}>Home</Link>
-            <Link to="/dashboard" style={{ color: blue }}>Dashboard</Link>
-            <Link to="/pricing" style={{ color: blue }}>Pricing</Link>
-            <Link to="/plan-selector" style={{ color: blue }}>Plans</Link>
-            <Link to="/credits" style={{ color: blue }}>Credits</Link>
-            <Link to="/contact" style={{ color: blue }}>Contact</Link>
-            {!user && <Link to="/login" style={{ color: blue }}>Login</Link>}
-            {!user && <Link to="/signup" style={{ color: blue }}>Sign Up</Link>}
-            {user && <LogoutButton />}
-          </div>
-          {user && (
-            <div style={{ position: 'absolute', right: 24, top: 12, color: blue, fontWeight: 600 }}>
-              {user.email} | Credits: {credits !== null ? credits : '...'}
-            </div>
-          )}
-        </nav>
-        {user && (
-          <div style={{textAlign:'center',background:'#e3f2fd',padding:8,marginBottom:0}}>
-            Logged in as <b>{user.email}</b>
-          </div>
-        )}
         <Switch>
           <Route exact path="/" component={HomePage} />
           <Route path="/dashboard" component={Dashboard} />

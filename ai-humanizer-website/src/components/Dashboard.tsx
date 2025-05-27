@@ -7,45 +7,121 @@ const Dashboard: React.FC = () => {
     const [error, setError] = useState('');
     const [user, setUser] = useState<any>(null);
     const [checkingAuth, setCheckingAuth] = useState(true);
+    const [profile, setProfile] = useState<any>(null);
+    const [credits, setCredits] = useState<number | null>(null);
+    const [creditsHistory, setCreditsHistory] = useState<any[]>([]);
+    const [payments, setPayments] = useState<any[]>([]);
 
     // Fetch user projects
     const fetchUserData = async (userId: string) => {
         setLoading(true);
         setError('');
-        const { data: projectsData, error } = await supabase
+        // Fetch projects
+        const { data: projectsData, error: projectsError } = await supabase
             .from('projects')
             .select('*')
             .eq('user_id', userId)
             .order('created_at', { ascending: false });
-        if (error) {
-            setError(error.message);
+        if (projectsError) {
+            setError(projectsError.message);
         } else {
             setProjects(projectsData || []);
         }
         setLoading(false);
     };
 
+    // Fetch user profile
+    const fetchUserProfile = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', userId)
+            .single();
+        if (!error) {
+            setProfile(data);
+        }
+    };
+
+    // Fetch user credits
+    const fetchUserCredits = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('users')
+            .select('credits, total_credits')
+            .eq('id', userId)
+            .single();
+        if (!error) {
+            setCredits(data?.credits ?? null);
+        }
+    };
+
+    // Fetch credits history
+    const fetchCreditsHistory = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('credits_history')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        if (!error) {
+            setCreditsHistory(data || []);
+        }
+    };
+
+    // Fetch payments
+    const fetchPayments = async (userId: string) => {
+        const { data, error } = await supabase
+            .from('payments')
+            .select('*, plan_id, plans(name)')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        if (!error) {
+            setPayments(data || []);
+        }
+    };
+
     useEffect(() => {
         let isMounted = true;
-        const checkUser = async () => {
+        const checkSession = async () => {
             setCheckingAuth(true);
-            const { data } = await supabase.auth.getUser();
-            if (!isMounted) { return; }
-            setUser(data?.user || null);
+            const { data: { session }, error } = await supabase.auth.getSession();
+            if (!isMounted) {
+                return;
+            }
+            if (error) {
+                setUser(null);
+                setCheckingAuth(false);
+                return;
+            }
+            setUser(session?.user || null);
             setCheckingAuth(false);
-            if (data?.user) {
-                fetchUserData(data.user.id);
+            if (session?.user) {
+                const userId = session.user.id;
+                fetchUserData(userId);
+                fetchUserProfile(userId);
+                fetchUserCredits(userId);
+                fetchCreditsHistory(userId);
+                fetchPayments(userId);
             }
         };
-        checkUser();
+        checkSession();
         // Subscribe to auth changes
         const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-            if (!isMounted) { return; }
+            if (!isMounted) {
+                return;
+            }
             setUser(session?.user || null);
             if (session?.user) {
-                fetchUserData(session.user.id);
+                const userId = session.user.id;
+                fetchUserData(userId);
+                fetchUserProfile(userId);
+                fetchUserCredits(userId);
+                fetchCreditsHistory(userId);
+                fetchPayments(userId);
             } else {
                 setProjects([]);
+                setProfile(null);
+                setCredits(null);
+                setCreditsHistory([]);
+                setPayments([]);
             }
         });
         return () => {
@@ -53,6 +129,17 @@ const Dashboard: React.FC = () => {
             authListener?.subscription?.unsubscribe();
         };
     }, []);
+
+    useEffect(() => {
+        // Debug: log user and session state
+        (async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            // eslint-disable-next-line no-console
+            console.log('Dashboard session:', session);
+            // eslint-disable-next-line no-console
+            console.log('Dashboard user state:', user);
+        })();
+    }, [user]);
 
     if (checkingAuth) return <div>Loading dashboard...</div>;
     if (!user) {
@@ -66,6 +153,15 @@ const Dashboard: React.FC = () => {
     return (
         <div className="dashboard">
             <h1>Your Dashboard</h1>
+            {profile && (
+                <div className="profile">
+                    <strong>Welcome, {profile.full_name || user.email}!</strong>
+                    {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" style={{ width: 48, borderRadius: '50%' }} />}
+                </div>
+            )}
+            <div className="credits">
+                <strong>Credits:</strong> {credits !== null ? credits : 'Loading...'}
+            </div>
             <h2>Stored Projects</h2>
             {loading ? (
                 <p>Loading...</p>
@@ -81,6 +177,24 @@ const Dashboard: React.FC = () => {
                     ))}
                 </ul>
             )}
+            <h2>Credits History</h2>
+            <ul>
+                {creditsHistory.length === 0 && <li>No credits history found.</li>}
+                {creditsHistory.map(entry => (
+                    <li key={entry.id}>
+                        {entry.change > 0 ? '+' : ''}{entry.change} ({entry.reason || 'No reason'}) <small>{new Date(entry.created_at).toLocaleString()}</small>
+                    </li>
+                ))}
+            </ul>
+            <h2>Payments</h2>
+            <ul>
+                {payments.length === 0 && <li>No payments found.</li>}
+                {payments.map(payment => (
+                    <li key={payment.id}>
+                        {payment.amount} credits for {payment.plans?.name || 'Unknown Plan'} - {payment.status} <small>{new Date(payment.created_at).toLocaleString()}</small>
+                    </li>
+                ))}
+            </ul>
         </div>
     );
 };
