@@ -32,6 +32,17 @@ const HomePage: React.FC = () => {
 
     // Toast state for feedback
     const [toast, setToast] = useState<{ type: 'error' | 'success', message: string } | null>(null);
+    
+    const handleLogout = async () => {
+        try {
+            await signOutUser();
+            setToast({ type: 'success', message: 'Successfully logged out' });
+            setTimeout(() => setToast(null), 3000);
+        } catch (error) {
+            setToast({ type: 'error', message: 'Failed to log out' });
+            setTimeout(() => setToast(null), 3000);
+        }
+    };
 
     useEffect(() => {
         let isMounted = true;
