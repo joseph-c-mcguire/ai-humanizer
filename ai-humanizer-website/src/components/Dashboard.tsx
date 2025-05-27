@@ -1,3 +1,7 @@
+// NOTE: If you get an npm ERESOLVE error when installing react-wordcloud with React 17,
+// run: npm install react-wordcloud d3-cloud --legacy-peer-deps
+// This will bypass the peer dependency warning for react@17 and allow installation.
+
 import React, { useEffect, useState } from 'react';
 import supabase from '../utils/supabaseClient';
 import ReactWordcloud from 'react-wordcloud';
