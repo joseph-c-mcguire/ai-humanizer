@@ -9,6 +9,9 @@ import PaymentScreen from './components/PaymentScreen';
 import ContactPage from './components/ContactPage';
 import CreditsTracker from './components/CreditsTracker';
 import PlanSelector from './components/PlanSelector';
+import CreditsPage from './components/CreditsPage';
+import SignUpPage from './components/SignUpPage';
+import LogoutButton from './components/LogoutButton';
 import supabase from './utils/supabaseClient';
 
 const turquoise = '#1DE9B6';
@@ -26,6 +29,7 @@ function ErrorFallback({ error }: { error: Error }) {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<any>(null);
+  const [credits, setCredits] = useState<number|null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,8 +40,16 @@ const App: React.FC = () => {
       if (isMounted) {
         if (data?.user) {
           setUser(data.user);
+          // Fetch credits if logged in
+          const { data: creditData } = await supabase
+            .from('user_credits')
+            .select('credits_remaining')
+            .eq('id', data.user.id)
+            .single();
+          setCredits(creditData?.credits_remaining ?? null);
         } else {
           setUser(null);
+          setCredits(null);
         }
         setLoading(false);
       }
@@ -47,6 +59,16 @@ const App: React.FC = () => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (isMounted) {
         setUser(session?.user || null);
+        if (session?.user) {
+          supabase
+            .from('user_credits')
+            .select('credits_remaining')
+            .eq('id', session.user.id)
+            .single()
+            .then(({ data: creditData }) => setCredits(creditData?.credits_remaining ?? null));
+        } else {
+          setCredits(null);
+        }
       }
     });
     return () => {
@@ -69,8 +91,15 @@ const App: React.FC = () => {
             <Link to="/plan-selector" style={{ color: blue }}>Plans</Link>
             <Link to="/credits" style={{ color: blue }}>Credits</Link>
             <Link to="/contact" style={{ color: blue }}>Contact</Link>
-            <Link to="/login" style={{ color: blue }}>Login</Link>
+            {!user && <Link to="/login" style={{ color: blue }}>Login</Link>}
+            {!user && <Link to="/signup" style={{ color: blue }}>Sign Up</Link>}
+            {user && <LogoutButton />}
           </div>
+          {user && (
+            <div style={{ position: 'absolute', right: 24, top: 12, color: blue, fontWeight: 600 }}>
+              {user.email} | Credits: {credits !== null ? credits : '...'}
+            </div>
+          )}
         </nav>
         {user && (
           <div style={{textAlign:'center',background:'#e3f2fd',padding:8,marginBottom:0}}>
@@ -82,9 +111,10 @@ const App: React.FC = () => {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/pricing" component={PricingPage} />
           <Route path="/login" component={LoginPage} />
+          <Route path="/signup" component={SignUpPage} />
           <Route path="/payment" component={PaymentScreen} />
           <Route path="/contact" component={ContactPage} />
-          <Route path="/credits" component={CreditsTracker} />
+          <Route path="/credits" component={CreditsPage} />
           <Route path="/plan-selector" component={PlanSelector} />
         </Switch>
       </Router>

@@ -26,22 +26,11 @@ serve(async (req) => {
     }
 
     // Use environment variables provided by Supabase Edge Runtime
-    // These are available as globalThis.env in the latest Supabase Edge Runtime
-    const { SUPABASE_URL, SUPABASE_ANON_KEY, OPENAI_API_KEY } = globalThis.env ?? {};
-
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return new Response(JSON.stringify({ error: 'Missing Supabase env vars' }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-    if (!OPENAI_API_KEY) {
-      return new Response(JSON.stringify({ error: 'Missing OpenAI API key' }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      });
-    }
-
+    // Prefer REACT_APP_* env vars if available, fallback to SUPABASE_* and OPENAI_API_KEY
+    const env = globalThis.env ?? {};
+    const SUPABASE_URL = env.REACT_APP_SUPABASE_URL || env.SUPABASE_URL;
+    const SUPABASE_ANON_KEY = env.REACT_APP_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY;
+    const OPENAI_API_KEY = env.REACT_APP_OPENAI_API_KEY || env.OPENAI_API_KEY;
     // Create a Supabase client with the auth token
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
@@ -61,6 +50,28 @@ serve(async (req) => {
     if (!inputText) {
       return new Response(JSON.stringify({ error: 'Missing inputText' }), { 
         status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Check user credits
+    const { data: creditData, error: creditError } = await supabase
+      .from('user_credits')
+      .select('credits_remaining, total_credits_used, plan_type')
+      .eq('id', user.id)
+      .single();
+    if (creditError || !creditData) {
+      return new Response(JSON.stringify({ error: 'Failed to retrieve user credits' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    if (creditData.credits_remaining <= 0) {
+      return new Response(JSON.stringify({
+        error: 'Insufficient credits',
+        message: 'You have run out of credits. Please upgrade your plan.'
+      }), {
+        status: 403,
         headers: { 'Content-Type': 'application/json' }
       });
     }
@@ -96,6 +107,36 @@ serve(async (req) => {
         headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    // Deduct credits and log usage
+    const creditsToUse = 1;
+    if (creditData.credits_remaining < creditsToUse) {
+      return new Response(JSON.stringify({
+        error: 'Insufficient credits',
+        message: `This operation requires ${creditsToUse} credits, but you only have ${creditData.credits_remaining}.`
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    // Deduct credits
+    await supabase
+      .from('user_credits')
+      .update({
+        credits_remaining: creditData.credits_remaining - creditsToUse,
+        total_credits_used: (creditData.total_credits_used || 0) + creditsToUse,
+        last_updated: new Date().toISOString()
+      })
+      .eq('id', user.id);
+    // Log usage
+    await supabase
+      .from('credit_usage_history')
+      .insert({
+        user_id: user.id,
+        action_type: 'humanize',
+        credits_used: creditsToUse,
+        input_length: inputText.length
+      });
 
     // Track usage in database
     await supabase

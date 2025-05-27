@@ -5,39 +5,64 @@ const Dashboard: React.FC = () => {
     const [projects, setProjects] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [user, setUser] = useState<any>(null);
+    const [checkingAuth, setCheckingAuth] = useState(true);
+
+    // Fetch user projects
+    const fetchUserData = async (userId: string) => {
+        setLoading(true);
+        setError('');
+        const { data: projectsData, error } = await supabase
+            .from('projects')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+        if (error) {
+            setError(error.message);
+        } else {
+            setProjects(projectsData || []);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
         let isMounted = true;
-        const fetchProjects = async () => {
-            setLoading(true);
-            setError('');
-            const { data, error: userError } = await supabase.auth.getUser();
-            const user = data?.user;
-            if (!user) {
-                if (isMounted) {
-                    setError('You must be logged in to view your dashboard.');
-                    setLoading(false);
-                }
-                return;
-            }
-            const { data: projectsData, error } = await supabase
-                .from('projects')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-            if (isMounted) {
-                if (error) {
-                    setError(error.message);
-                } else {
-                    setProjects(projectsData || []);
-                }
-                setLoading(false);
+        const checkUser = async () => {
+            setCheckingAuth(true);
+            const { data } = await supabase.auth.getUser();
+            if (!isMounted) { return; }
+            setUser(data?.user || null);
+            setCheckingAuth(false);
+            if (data?.user) {
+                fetchUserData(data.user.id);
             }
         };
-        fetchProjects();
-        return () => { isMounted = false; };
+        checkUser();
+        // Subscribe to auth changes
+        const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (!isMounted) { return; }
+            setUser(session?.user || null);
+            if (session?.user) {
+                fetchUserData(session.user.id);
+            } else {
+                setProjects([]);
+            }
+        });
+        return () => {
+            isMounted = false;
+            authListener?.subscription?.unsubscribe();
+        };
     }, []);
 
+    if (checkingAuth) return <div>Loading dashboard...</div>;
+    if (!user) {
+        return (
+            <div className="auth-required">
+                <h2>You must be logged in to view your dashboard.</h2>
+                <p>Please <a href="/login">log in</a> or <a href="/signup">sign up</a> to continue.</p>
+            </div>
+        );
+    }
     return (
         <div className="dashboard">
             <h1>Your Dashboard</h1>
