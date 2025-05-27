@@ -1,6 +1,6 @@
 [build]
   publish = "ai-humanizer-website/build"
-  command = "npm install --legacy-peer-deps && npm run build"
+  command = "cd ai-humanizer-website && npm install --legacy-peer-deps && npm run build"
 
 [functions]
   directory = "netlify/functions"
