@@ -40,8 +40,8 @@ export type CreditHistoryItem = {
   amount: number;
   reason: string;
   created_at: string;
-  // Add these fields for compatibility with CreditsPage
-  action_type?: string;
+  // Ensure 'action_type' is always a string for compatibility with CreditsPage
+  action_type: string;
   credits_used?: number;
   input_length?: number;
 };

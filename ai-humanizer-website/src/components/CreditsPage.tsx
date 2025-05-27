@@ -33,7 +33,14 @@ const CreditsPage: React.FC = () => {
         }
 
         const creditHistory = await getCreditHistory();
-        setHistory(creditHistory);
+        // Map to ensure all fields are non-optional as required by CreditHistory
+        setHistory(creditHistory.map(item => ({
+          id: item.id,
+          action_type: item.action_type,
+          credits_used: item.credits_used ?? 0,
+          created_at: item.created_at,
+          input_length: item.input_length ?? 0,
+        })));
       }
       setLoading(false);
     };
