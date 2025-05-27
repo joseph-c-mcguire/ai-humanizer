@@ -176,13 +176,13 @@ const Dashboard: React.FC = () => {
     }));
 
     // Usage over time (simple bar chart)
-    const usageByDay = projects.reduce((acc, p) => {
+    const usageByDay: Record<string, number> = projects.reduce((acc, p) => {
         const day = new Date(p.created_at).toLocaleDateString();
         acc[day] = (acc[day] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);
-    const usageDays = Object.keys(usageByDay);
-    const usageCounts = Object.values(usageByDay);
+    const usageDays: string[] = Object.keys(usageByDay);
+    const usageCounts: number[] = Object.values(usageByDay);
 
     function evaluateBestPractices(text: string) {
         const { length } = text;
