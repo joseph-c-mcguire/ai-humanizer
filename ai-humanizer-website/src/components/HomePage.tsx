@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import supabase from '../utils/supabaseClient';
-import HighlightedDiff from './HomePageDiff';
+import HighlightedDiff from './HomePageDiff.tsx';
 import { signUpUser, signInUser, signOutUser, getSession } from '../utils/auth';
 
 const turquoise = '#1DE9B6';
@@ -156,7 +156,7 @@ const HomePage: React.FC = () => {
         e.preventDefault();
         setAuthError('');
         try {
-            const { user, error } = await signInUser(authEmail, authPassword);
+            const { user, error } = await signInUser({ email: authEmail, password: authPassword });
             if (error) {
                 setAuthError(error.message || 'Login failed');
                 return;
@@ -176,9 +176,11 @@ const HomePage: React.FC = () => {
         e.preventDefault();
         setAuthError('');
         try {
-            const { user, error } = await signUpUser(authEmail, authPassword, {
-                first_name: authFirstName,
-                last_name: authLastName,
+            const { user, error } = await signUpUser({
+                email: authEmail,
+                password: authPassword,
+                firstName: authFirstName,
+                lastName: authLastName,
             });
             if (error) {
                 setAuthError(error.message || 'Sign up failed');
