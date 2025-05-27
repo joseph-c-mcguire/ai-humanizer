@@ -52,11 +52,26 @@ const HomePage: React.FC = () => {
         setDiffReasons([]);
         try {
             // Use the same humanizeText logic as before
-            const result = await fetch('/api/humanizer', {
+            const response = await fetch('/api/humanizer', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ text: inputText })
-            }).then(res => res.json());
+            });
+            if (!response.ok) {
+                // Try to get error message from response, fallback to status
+                let msg = `API error: ${response.status}`;
+                try {
+                    const text = await response.text();
+                    msg = text || msg;
+                } catch {}
+                throw new Error(msg);
+            }
+            let result;
+            try {
+                result = await response.json();
+            } catch (jsonErr) {
+                throw new Error('The server did not return valid JSON. This usually means the API is not running or misconfigured.');
+            }
             setOutputText(result.output || '');
             // Simple diff for now
             const inputWords = inputText.split(/(\s+)/);
