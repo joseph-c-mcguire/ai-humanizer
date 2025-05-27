@@ -330,6 +330,34 @@ const HomePage: React.FC = () => {
                             </button>
                         </h2>
                         <HighlightedDiff input={inputText} output={outputText} reasons={diffReasons} />
+                        {/* Save to Dashboard button for logged-in users */}
+                        {user && (
+                            <button
+                                style={{
+                                    marginTop: 18,
+                                    background: blue,
+                                    color: '#fff',
+                                    border: 'none',
+                                    borderRadius: 8,
+                                    padding: '10px 28px',
+                                    fontSize: 17,
+                                    cursor: 'pointer',
+                                    fontWeight: 700,
+                                    boxShadow: '0 1px 4px rgba(25,118,210,0.08)',
+                                }}
+                                onClick={async () => {
+                                    await supabase.from('projects').insert({
+                                        user_id: user.id,
+                                        input_text: inputText,
+                                        output_text: outputText,
+                                        created_at: new Date().toISOString(),
+                                    });
+                                    alert('Saved to your dashboard!');
+                                }}
+                            >
+                                Save to Dashboard
+                            </button>
+                        )}
                     </div>
                 )}
             </section>
