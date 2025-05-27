@@ -151,6 +151,51 @@ const HomePage: React.FC = () => {
         setTimeout(() => setClearAnim(false), 500);
     };
 
+    // Login handler
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setAuthError('');
+        try {
+            const { user, error } = await signInUser(authEmail, authPassword);
+            if (error) {
+                setAuthError(error.message || 'Login failed');
+                return;
+            }
+            setShowLogin(false);
+            setAuthEmail('');
+            setAuthPassword('');
+            setToast({ type: 'success', message: 'Logged in successfully' });
+            setTimeout(() => setToast(null), 2000);
+        } catch (err: any) {
+            setAuthError(err.message || 'Login failed');
+        }
+    };
+
+    // Signup handler
+    const handleSignup = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setAuthError('');
+        try {
+            const { user, error } = await signUpUser(authEmail, authPassword, {
+                first_name: authFirstName,
+                last_name: authLastName,
+            });
+            if (error) {
+                setAuthError(error.message || 'Sign up failed');
+                return;
+            }
+            setShowSignup(false);
+            setAuthEmail('');
+            setAuthPassword('');
+            setAuthFirstName('');
+            setAuthLastName('');
+            setToast({ type: 'success', message: 'Account created! Please check your email to confirm.' });
+            setTimeout(() => setToast(null), 3000);
+        } catch (err: any) {
+            setAuthError(err.message || 'Sign up failed');
+        }
+    };
+
     // Centering for main container and sections
     return (
         <div style={{
