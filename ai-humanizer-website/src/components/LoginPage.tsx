@@ -33,6 +33,8 @@ const LoginPage: React.FC = () => {
         <form className="login-form" onSubmit={handleLogin}>
             <input
                 type="email"
+                id="login-email"
+                name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Email"
@@ -40,6 +42,8 @@ const LoginPage: React.FC = () => {
             />
             <input
                 type="password"
+                id="login-password"
+                name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
